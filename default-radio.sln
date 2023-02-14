@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "default-radio", "default-radio.csproj", "{2905F327-E58D-43CC-BBAF-531C1EA0524D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2905F327-E58D-43CC-BBAF-531C1EA0524D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2905F327-E58D-43CC-BBAF-531C1EA0524D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2905F327-E58D-43CC-BBAF-531C1EA0524D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2905F327-E58D-43CC-BBAF-531C1EA0524D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {28581D5C-D274-461B-AA14-E8BC51258BEA}
+	EndGlobalSection
+EndGlobal
