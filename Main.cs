@@ -74,7 +74,9 @@ namespace default_radio
                         radioMenuList.Items.Add("Self Radio");
                     }
                     isPrevHasSelfRadio = current;
-                    OnEnterVehicle();
+
+                    if (Game.Player.Character.IsInVehicle())
+                        OnEnterVehicle();
                 }
                 menu.Visible = !pool.IsAnyMenuOpen();
             }
@@ -154,7 +156,7 @@ namespace default_radio
             var success = settings.Save();
             if (!success)
                 UI.Notify("Failed to set default radio!");
-
+            // UI.Notify(Game.Player.Character.IsInVehicle().ToString());
             if (Game.Player.Character.IsInVehicle())
                 OnEnterVehicle();
         }
@@ -167,8 +169,9 @@ namespace default_radio
                 return;
             }
             Game.Player.LastVehicle.IsRadioEnabled = true;
+            
             if (radioIdx == 254) return;
-
+            // UI.Notify(radioIdx.ToString());
             if (IsHasSelfRadio())
             {
                 if (radioIdx == 253)
