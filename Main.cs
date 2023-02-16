@@ -38,7 +38,7 @@ namespace default_radio
         public void OnTick(object o, EventArgs e)
         {
             pool.ProcessMenus();
-            if (Game.GameTime > timeToCheck && radioIdx != 254)
+            if (Game.GameTime > timeToCheck)
             {
                 timeToCheck = Game.GameTime + 500;
 
@@ -74,6 +74,7 @@ namespace default_radio
                         radioMenuList.Items.Add("Self Radio");
                     }
                     isPrevHasSelfRadio = current;
+                    OnEnterVehicle();
                 }
                 menu.Visible = !pool.IsAnyMenuOpen();
             }
@@ -152,23 +153,35 @@ namespace default_radio
             settings.SetValue("DEFAULT_RADIO", "RADIO_IDX", radioIdx);
             var success = settings.Save();
             if (!success)
-            {
                 UI.Notify("Failed to set default radio!");
-            }
+
+            if (Game.Player.Character.IsInVehicle())
+                OnEnterVehicle();
         }
 
         private void OnEnterVehicle()
         {
-            var idx = radioIdx;
-            if (radioIdx == 253)
+            if (radioIdx == 255)
             {
-                if (!IsHasSelfRadio()) return;
-                Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, 11);
+                Game.Player.LastVehicle.IsRadioEnabled = false;
                 return;
             }
-            if (idx >= 11 && idx != 255) idx++;
+            Game.Player.LastVehicle.IsRadioEnabled = true;
+            if (radioIdx == 254) return;
 
-            Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, idx);
+            if (IsHasSelfRadio())
+            {
+                if (radioIdx == 253)
+                {
+                    Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, 11);
+                    return;
+                }
+                Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, radioIdx < 11 ? radioIdx : radioIdx + 1);
+                return;
+            }
+            if (radioIdx == 253) return;
+
+            Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, radioIdx < 11 ? radioIdx : radioIdx + 1);
         }
 
         private bool IsHasSelfRadio()
