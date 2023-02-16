@@ -15,9 +15,14 @@ namespace default_radio
         private int radioIdx;
         private readonly MenuPool pool;
         private readonly UIMenu menu;
+        private UIMenuListItem radioMenuList;
+        private bool isPrevHasSelfRadio;
 
         public Main()
         {
+            settings = ScriptSettings.Load("scripts/default-radio.ini");
+            radioIdx = settings.GetValue("DEFAULT_RADIO", "RADIO_IDX", 255);
+
             pool = new MenuPool();
             menu = new UIMenu("Default Radio", "~b~Choose Radio Station");
             pool.Add(menu);
@@ -25,8 +30,6 @@ namespace default_radio
             pool.RefreshIndex();
 
             IsPrevOnVehicle = Game.Player.Character.IsInVehicle();
-            settings = ScriptSettings.Load("./default_radio.ini");
-            radioIdx = settings.GetValue("", "radioIdx", 255);
 
             Tick += OnTick;
             KeyDown += OnKeyDown;
@@ -35,7 +38,7 @@ namespace default_radio
         public void OnTick(object o, EventArgs e)
         {
             pool.ProcessMenus();
-            if (Game.GameTime > timeToCheck)
+            if (Game.GameTime > timeToCheck && radioIdx != 254)
             {
                 timeToCheck = Game.GameTime + 500;
 
@@ -51,7 +54,27 @@ namespace default_radio
 
         public void OnKeyDown(object o, KeyEventArgs e)
         { 
-            if (e.KeyCode == Keys.D9) {
+            if (e.KeyCode == Keys.NumPad0) {
+                if (!menu.Visible)
+                {
+                    var current = IsHasSelfRadio();
+                    if (!current && isPrevHasSelfRadio)
+                    {
+                        radioMenuList.Items.RemoveAt(radioMenuList.Items.Count - 1);
+                        UI.Notify("User doesn't have self radio, DefaultRadio disabled");
+                        if (radioIdx == 253)
+                        {
+                            radioIdx = 254;
+                            radioMenuList.Index = radioMenuList.Items.Count - 1;
+                        }
+                    }
+                    else if (current && !isPrevHasSelfRadio)
+                    {
+                        UI.Notify("Adding self radio");
+                        radioMenuList.Items.Add("Self Radio");
+                    }
+                    isPrevHasSelfRadio = current;
+                }
                 menu.Visible = !pool.IsAnyMenuOpen();
             }
         }
@@ -70,7 +93,6 @@ namespace default_radio
                 "Blonded Los Santos 97.8 FM",
                 "Los Santos Undeground Radio",
                 "iFruit Radio",
-                "Self Radio",
                 "Los Santos Rock Radio",
                 "Non-Stop-Pop FM",
                 "Radio Los Santos",
@@ -81,25 +103,77 @@ namespace default_radio
                 "East Los FM",
                 "West Cost Classics",
                 "MOTOMAMI Los Santos",
-                "Radio Off"
+                "Radio Off",
+                "Disable DefaultRadio"
             };
 
-
-            var newitem = new UIMenuListItem("", radios, 0);
-            menu.AddItem(newitem);
-            menu.OnListChange += (sender, item, index) =>
+            isPrevHasSelfRadio = IsHasSelfRadio();
+            if (isPrevHasSelfRadio)
+                radios.Add("Self Radio");
+            
+            if (radioIdx == 255)
+                radioMenuList = new UIMenuListItem("", radios, radios.Count - 2);
+            else if (radioIdx == 254)
+                radioMenuList = new UIMenuListItem("", radios, radios.Count - 1);
+            else if (radioIdx == 253)
             {
-                if (item != newitem)
-                    return;
+                if (!isPrevHasSelfRadio)
+                    UI.Notify("User doesn't have self radio, DefaultRadio disabled");      
                 
-                var radio = item.Items[index] as string;
-                UI.Notify(radio);
-            };
+                radioMenuList = new UIMenuListItem("", radios, radios.Count - 1);
+            }
+            else
+            {
+                radioIdx %= 21;
+                radioMenuList = new UIMenuListItem("", radios, radioIdx);
+            }
+            
+            menu.AddItem(radioMenuList);
+            radioMenuList.OnListChanged += OnRadioSelected;
+        }
+
+        private void OnRadioSelected(UIMenuListItem source, int idx)
+        {
+            if (isPrevHasSelfRadio)
+            {
+                if (idx == source.Items.Count - 1)
+                    radioIdx = 253;
+                else if (idx == source.Items.Count - 2)
+                    radioIdx = 254;
+                else if (idx == source.Items.Count - 3)
+                    radioIdx = 255;
+                else
+                    radioIdx = idx;
+            }
+            else
+            {
+                radioIdx = idx;
+            }
+            settings.SetValue("DEFAULT_RADIO", "RADIO_IDX", radioIdx);
+            var success = settings.Save();
+            if (!success)
+            {
+                UI.Notify("Failed to set default radio!");
+            }
         }
 
         private void OnEnterVehicle()
         {
-            Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, radioIdx);
+            var idx = radioIdx;
+            if (radioIdx == 253)
+            {
+                if (!IsHasSelfRadio()) return;
+                Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, 11);
+                return;
+            }
+            if (idx >= 11 && idx != 255) idx++;
+
+            Function.Call(Hash.SET_RADIO_TO_STATION_INDEX, idx);
+        }
+
+        private bool IsHasSelfRadio()
+        {
+            return Function.Call<string>(Hash.GET_RADIO_STATION_NAME, 11) == "RADIO_19_USER";
         }
     }
 }
